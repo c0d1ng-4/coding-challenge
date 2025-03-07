@@ -70,7 +70,6 @@ async def update_patient(
     updated_patient = Patient(
         id=patient_id,
         name=update_data.get("name", current_patient.name),
-        address=update_data.get("address", current_patient.address),
         care_type=update_data.get("care_type", current_patient.care_type),
         zip_code=update_data.get("zip_code", current_patient.zip_code),
     )
