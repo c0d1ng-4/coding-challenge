@@ -7,4 +7,5 @@ def validate_uuid(value: str | None) -> str | None:
             UUID(value)
         except ValueError:
             raise ValueError(f"{value} is not a valid UUID")
-    return str(value)
+        return str(value)
+    return None
