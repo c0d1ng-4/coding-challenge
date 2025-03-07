@@ -4,11 +4,17 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.endpoints import dummy_router
+from app.api.v1.api import api_router
+from app.core.config import settings
 
 PORT = 8000
 
-app = FastAPI(title="My FastAPI Project", description="Project description", version="1.0.0")
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    description="Coding challenge",
+    version="1.0.0",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,8 +32,7 @@ async def lifespan(_: FastAPI):
 
 app.lifespan = lifespan
 
-
-app.include_router(dummy_router.router)
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
 if __name__ == "__main__":

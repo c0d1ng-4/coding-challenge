@@ -8,7 +8,7 @@ from app.domain.models.zip_code_range import ZipCodeRange
 
 
 class Facility(CustomBaseModel):
-    id: str
+    id: str | None = None
     name: str
     capacity: CapacityType
     zip_code: str
@@ -17,4 +17,18 @@ class Facility(CustomBaseModel):
 
     @field_validator("id", mode="before")
     def validate_uuid(cls, value):
+        if value is None:
+            return value
         return validate_uuid(value)
+
+    @field_validator("capacity", mode="before")
+    def validate_capacity(cls, value: str | None):
+        if value is not None:
+            return value.lower()
+        return value
+
+    @field_validator("care_types", mode="before")
+    def validate_care_types(cls, value: list[str] | None):
+        if value is not None:
+            return [care_type.lower() for care_type in value]
+        return value

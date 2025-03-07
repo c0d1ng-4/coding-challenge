@@ -29,6 +29,11 @@ class Patient(base.Base):
         index=True,
         onupdate=sa.sql.func.now(),
     )
+    deleted_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=True,
+        index=True,
+    )
 
 
 class Facility(base.Base):
@@ -50,6 +55,11 @@ class Facility(base.Base):
         nullable=False,
         index=True,
         onupdate=sa.sql.func.now(),
+    )
+    deleted_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=True,
+        index=True,
     )
 
     care_types = relationship("FacilityCareType", back_populates="facility", cascade="all, delete-orphan")
