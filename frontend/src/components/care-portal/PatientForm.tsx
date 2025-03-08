@@ -5,13 +5,12 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   patientFormSchema,
   PatientFormData
 } from "@/lib/schemas/patient-form-schema";
 import NameStep from "./NameStep";
-import CareTypeStep from "./CareTypeStep";
 import ZipCodeStep from "./ZipCodeStep";
 import ResultStep from "./ResultStep";
 import { FacilityMatchingService } from "@/api/services/FacilityMatchingService";
@@ -20,9 +19,8 @@ import { ApiError } from "@/api/core/ApiError";
 import { FormProvider, FORM_STEPS, useFormContext } from "./FormContext";
 import { sanitizeInput, getErrorMessage } from "@/lib/utils";
 import { useCallback } from "react";
-import { FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
+import { FormField } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 
 // Interface for form props
 interface PatientFormProps {
@@ -44,7 +42,14 @@ function PatientFormContent({ hideTitle = false }: PatientFormProps) {
     form
   } = useFormContext();
 
-  // Skip if form isn't available (shouldn't happen with proper setup)
+  // Define all hooks at the top level, before any conditionals
+  const onSubmit = useCallback((data: PatientFormData) => {
+    // This is just a placeholder for the form submission
+    // The actual submission happens in handleNextStep
+    console.log("Form submitted:", data);
+  }, []);
+
+  // Now we can have conditional returns
   if (!form) return null;
 
   const handleNextStep = async () => {
@@ -122,12 +127,6 @@ function PatientFormContent({ hideTitle = false }: PatientFormProps) {
       }
     }
   };
-
-  const onSubmit = useCallback((data: PatientFormData) => {
-    // This is just a placeholder for the form submission
-    // The actual submission happens in handleNextStep
-    console.log("Form submitted:", data);
-  }, []);
 
   // Generate a title for the current step
   const getStepTitle = () => {

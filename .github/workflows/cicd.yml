@@ -54,95 +54,20 @@ jobs:
         DATABASE_URL: postgresql+asyncpg://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@${{ secrets.DB_HOST }}:5432/${{ secrets.DB_NAME }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         ENVIRONMENT: "test"
-    
-  docker-build-and-test:
-    runs-on: ubuntu-latest
-    needs: test
-    environment: dev
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
-    - name: Build and test Docker image
-      run: |
-        # Clear any existing containers and networks
-        docker system prune -f
-        
-        cd backend
-        docker build -t backend-app:test .
-        
-        # Create a test network
-        docker network create test-network
-        
-        # Use environment secrets for database credentials
-        docker run -d \
-          --name postgres-test \
-          --network test-network \
-          -e POSTGRES_USER=${{ secrets.DB_USER }} \
-          -e POSTGRES_PASSWORD=${{ secrets.DB_PASS }} \
-          -e POSTGRES_DB=${{ secrets.DB_NAME }} \
-          postgres:15
-        
-        # Check if postgres is running
-        docker ps
-        echo "Waiting for postgres to be ready..."
-        sleep 15
-        
-        # Run the application container with test environment
-        docker run -d \
-          --name backend-test \
-          --network test-network \
-          -e DATABASE_URL=postgresql+asyncpg://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@postgres-test:5432/${{ secrets.DB_NAME }} \
-          -e SECRET_KEY=${{ secrets.SECRET_KEY }} \
-          -e ENVIRONMENT=test \
-          backend-app:test
-        
-        # Wait for containers to be ready
-        sleep 10
-        
-        # Check if the container is running
-        if [ "$(docker inspect -f {{.State.Running}} backend-test)" = "true" ]; then
-          echo "Docker container is running successfully"
-        else
-          echo "Docker container failed to start"
-          docker logs backend-test
-          exit 1
-        fi
-        
-        # Clean up
-        docker stop backend-test postgres-test
-        docker rm backend-test postgres-test
-        docker network rm test-network
   
-  build:
-    needs: [test, docker-build-and-test]
+  deploy-infrastructure:
+    needs: [test]
     runs-on: ubuntu-latest
-    environment: dev
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: dev
     
     steps:
     - uses: actions/checkout@v3
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    - name: Setup Pulumi
+      uses: pulumi/setup-pulumi@v2
     
-    - name: Build Docker image locally (without push)
-      uses: docker/build-push-action@v4
-      with:
-        context: ./backend
-        push: false
-        load: true
-        tags: backend-app:latest
-    
-    - name: Verify Docker image
-      run: |
-        docker image ls
-        echo "Docker image built successfully"
-    
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
@@ -154,12 +79,62 @@ jobs:
         virtualenvs-create: true
         virtualenvs-in-project: true
     
+    - name: Install dependencies with Poetry
+      run: |
+        cd infrastructure
+        poetry install
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+    
+    - name: Update Pulumi Stack
+      run: |
+        cd infrastructure
+        pulumi stack select dev
+        pulumi config set --secret db_user ${{ secrets.DB_USER }}
+        pulumi config set --secret db_password ${{ secrets.DB_PASS }}
+        pulumi config set db_host ${{ secrets.DB_HOST }}
+        pulumi config set db_name ${{ secrets.DB_NAME }}
+        poetry run pulumi up --yes
+        # Extract the backend URL from Pulumi outputs
+        BACKEND_URL=$(poetry run pulumi stack output backend_url)
+        echo "BACKEND_URL=${BACKEND_URL}" >> $GITHUB_ENV
+      env:
+        PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+    
+  deploy-frontend:
+    needs: deploy-infrastructure
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
     - name: Install dependencies
       run: |
-        cd backend
-        poetry install --no-interaction --no-dev
+        cd frontend
+        yarn install
     
-    - name: Build package
+    - name: Build frontend
       run: |
-        cd backend
-        poetry build 
+        cd frontend
+        echo "NEXT_PUBLIC_API_BASE_URL=${{ env.BACKEND_URL }}" > .env.production
+        yarn build
+    
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v20
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: ./frontend
+        vercel-args: '--prod'

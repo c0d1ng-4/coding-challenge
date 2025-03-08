@@ -1,0 +1,9 @@
+config:
+  aws:region: eu-north-1
+  coding-challenge-infra:db_user:
+    secure: AAABAPscVjIw1XjvfHXyWiKHcVWJQWfzSg7H5/TF2lgr7o9LRox8ng==
+  coding-challenge-infra:db_password:
+    secure: AAABAO9hEFEIp5G19QNKFqyL+SOWS+eUEYlP1zXRkEZ8dqb/5JniVvkAu1acoijMmJ7RIg==
+  coding-challenge-infra:db_host: database-1.ct6kagqkgnzg.eu-north-1.rds.amazonaws.com
+  coding-challenge-infra:db_name: postgres
+  aws:skipMetadataApiCheck: "false"

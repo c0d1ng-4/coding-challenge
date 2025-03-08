@@ -1,7 +1,6 @@
 import { PatientFormData } from "@/lib/schemas/patient-form-schema";
 import { CareType } from "@/api/models/CareType";
 import FormStep from "./FormStep";
-import { FacilityForm } from "@/components/admin/FacilityForm";
 
 interface FacilityMatch {
   matched: boolean;
@@ -90,7 +89,7 @@ export default function ResultStep({ matchResult, patientData }: ResultStepProps
             <div className="p-4 rounded-lg border bg-amber-50/80 dark:bg-amber-950/30 dark:border-amber-900/50">
               <p className="font-semibold text-amber-700 dark:text-amber-300">No matching facility found</p>
               <p className="mt-2 text-amber-700 dark:text-amber-200">
-                We couldn't find a suitable care facility based on your requirements.
+                We couldn&apos;t find a suitable care facility based on your requirements.
                 This might be because:
               </p>
               <ul className="list-disc ml-5 mt-2 text-amber-700 dark:text-amber-200">
