@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CapacityType } from "@/api/models/CapacityType";
 
@@ -30,7 +30,15 @@ export function FacilityForm() {
       min_zip_code: "",
       max_zip_code: "",
     },
+    mode: "onChange",
   });
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset();
+    }
+  }, [isOpen, form]);
 
   const careTypeOptions = [
     { id: CareType.STATIONARY, label: "Stationary" },
@@ -52,26 +60,40 @@ export function FacilityForm() {
         form.reset();
         setIsOpen(false);
       } else {
-        toast.error(result.message);
+        toast.error(result.message || "Failed to add facility");
       }
     } catch (error) {
-      toast.error("Failed to add facility");
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to add facility";
+      toast.error(errorMessage);
+      console.error("Error submitting facility form:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleCloseDialog = () => {
+    if (!isSubmitting) {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <TooltipProvider>
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        setIsOpen(open);
-        if (!open) form.reset();
-      }}>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!isSubmitting) setIsOpen(open);
+        }}
+      >
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/50">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="rounded-full h-8 w-8 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/50"
+                aria-label="Add Facility"
+              >
                 <PlusCircle className="h-4 w-4" />
                 <span className="sr-only">Add Facility</span>
               </Button>
@@ -103,6 +125,8 @@ export function FacilityForm() {
                         {...field}
                         error={!!fieldState.error}
                         className="bg-background"
+                        aria-invalid={!!fieldState.error}
+                        disabled={isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -129,6 +153,8 @@ export function FacilityForm() {
                             field.onChange(value);
                           }}
                           className="bg-background"
+                          aria-invalid={!!fieldState.error}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -146,6 +172,7 @@ export function FacilityForm() {
                         <select
                           className="border-input bg-background text-foreground placeholder:text-muted-foreground flex h-10 w-full rounded-lg border px-3 py-2 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
                           {...field}
+                          disabled={isSubmitting}
                         >
                           {capacityOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -196,6 +223,7 @@ export function FacilityForm() {
                                           )
                                         );
                                     }}
+                                    disabled={isSubmitting}
                                   />
                                 </FormControl>
                                 <FormLabel className="font-normal cursor-pointer text-foreground">
@@ -236,6 +264,8 @@ export function FacilityForm() {
                               field.onChange(value);
                             }}
                             className="bg-background"
+                            aria-invalid={!!fieldState.error}
+                            disabled={isSubmitting}
                           />
                         </FormControl>
                         <FormMessage />
@@ -261,6 +291,8 @@ export function FacilityForm() {
                               field.onChange(value);
                             }}
                             className="bg-background"
+                            aria-invalid={!!fieldState.error}
+                            disabled={isSubmitting}
                           />
                         </FormControl>
                         <FormMessage />
@@ -274,7 +306,7 @@ export function FacilityForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleCloseDialog}
                   disabled={isSubmitting}
                   className="bg-background"
                 >
@@ -285,7 +317,14 @@ export function FacilityForm() {
                   disabled={isSubmitting}
                   variant="violet"
                 >
-                  {isSubmitting ? "Adding..." : "Add Facility"}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    "Add Facility"
+                  )}
                 </Button>
               </DialogFooter>
             </form>

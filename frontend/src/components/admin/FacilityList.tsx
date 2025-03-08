@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ListFilter } from "lucide-react";
+import { ListFilter, RefreshCw } from "lucide-react";
 import { FacilitiesService } from "@/api/services/FacilitiesService";
 import type { FacilityResponse } from "@/api/models/FacilityResponse";
 import { CareType } from "@/api/models/CareType";
@@ -15,26 +15,41 @@ export function FacilityList() {
     const [facilities, setFacilities] = useState<FacilityResponse[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [page, setPage] = useState(0);
+    const limit = 20; // Number of items per page
 
-    const fetchFacilities = async () => {
+    const fetchFacilities = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await FacilitiesService.getFacilitiesApiV1FacilitiesGet();
-            setFacilities(data);
+            const data = await FacilitiesService.getFacilitiesApiV1FacilitiesGet(
+                page * limit,
+                limit
+            );
+            setFacilities(prev => page === 0 ? data : [...prev, ...data]);
         } catch (err) {
             setError("Failed to load facilities");
             console.error("Error fetching facilities:", err);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [page, limit]);
+
+    const handleRefresh = useCallback(() => {
+        setPage(0);
+        setFacilities([]);
+        fetchFacilities();
+    }, [fetchFacilities]);
+
+    const loadMore = useCallback(() => {
+        setPage(prev => prev + 1);
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
             fetchFacilities();
         }
-    }, [isOpen]);
+    }, [isOpen, fetchFacilities, page]);
 
     const careTypeLabels: Record<CareType, string> = {
         [CareType.STATIONARY]: "Stationary",
@@ -62,6 +77,7 @@ export function FacilityList() {
                             variant="ghost"
                             className="rounded-full h-8 w-8 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/50"
                             onClick={() => setIsOpen(true)}
+                            aria-label="List Facilities"
                         >
                             <ListFilter className="h-4 w-4" />
                             <span className="sr-only">List Facilities</span>
@@ -72,18 +88,36 @@ export function FacilityList() {
                     </TooltipContent>
                 </Tooltip>
                 <DialogContent className="sm:max-w-[600px] p-6">
-                    <DialogHeader className="mb-4">
+                    <DialogHeader className="mb-4 flex justify-between items-center">
                         <DialogTitle className="text-xl font-semibold">All Facilities</DialogTitle>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={handleRefresh}
+                            className="h-8 w-8"
+                            disabled={isLoading}
+                            aria-label="Refresh facilities list"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                            <span className="sr-only">Refresh</span>
+                        </Button>
                     </DialogHeader>
 
                     <div className="overflow-y-auto max-h-[60vh]">
-                        {isLoading ? (
+                        {isLoading && facilities.length === 0 ? (
                             <div className="flex justify-center py-8">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
                             </div>
                         ) : error ? (
                             <div className="text-center py-8 text-red-600 dark:text-red-400">
                                 {error}
+                                <Button
+                                    variant="outline"
+                                    className="mt-4 mx-auto block"
+                                    onClick={handleRefresh}
+                                >
+                                    Try Again
+                                </Button>
                             </div>
                         ) : facilities.length === 0 ? (
                             <div className="text-center py-8 text-muted-foreground">
@@ -122,6 +156,17 @@ export function FacilityList() {
                                         </div>
                                     </div>
                                 ))}
+
+                                {facilities.length >= (page + 1) * limit && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full mt-4"
+                                        onClick={loadMore}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Loading...' : 'Load More'}
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </div>
