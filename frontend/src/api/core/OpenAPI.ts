@@ -20,13 +20,16 @@ export type OpenAPIConfig = {
 };
 
 export const OpenAPI: OpenAPIConfig = {
-    BASE: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1',
+    BASE: process.env.NEXT_PUBLIC_API_BASE_URL || '',
     VERSION: '1.0.0',
-    WITH_CREDENTIALS: false,
+    WITH_CREDENTIALS: true,
     CREDENTIALS: 'include',
     TOKEN: undefined,
     USERNAME: undefined,
     PASSWORD: undefined,
-    HEADERS: undefined,
+    HEADERS: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json'
+    },
     ENCODE_PATH: undefined,
 };

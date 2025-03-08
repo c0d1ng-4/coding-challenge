@@ -1,14 +1,12 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
   title: "CarePortal Beta",
-  description: "Facility matcher",
+  description: "Find the right care facility for your needs",
 };
 
 export default function RootLayout({
@@ -17,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-background text-foreground transition-colors duration-300`}>
+    <html lang="en" data-theme="light">
+      <body className={GeistSans.className}>
         <ThemeProvider>
           {children}
           <Toaster position="top-center" />

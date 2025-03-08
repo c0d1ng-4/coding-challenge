@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -16,64 +15,37 @@ import CareTypeStep from "./CareTypeStep";
 import ZipCodeStep from "./ZipCodeStep";
 import ResultStep from "./ResultStep";
 import { FacilityMatchingService } from "@/api/services/FacilityMatchingService";
-import { FacilityMatchRequest } from "@/api/models/FacilityMatchRequest";
 import { CareType } from "@/api/models/CareType";
-import { FacilityMatchResponse } from "@/api/models/FacilityMatchResponse";
 import { ApiError } from "@/api/core/ApiError";
+import { FormProvider, FORM_STEPS, useFormContext } from "./FormContext";
+import { sanitizeInput, getErrorMessage } from "@/lib/utils";
+import { useCallback } from "react";
+import { FormField, FormItem, FormControl, FormMessage, FormLabel } from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
-interface FacilityMatch {
-  matched: boolean;
-  facility?: {
-    id: string;
-    name: string;
-    capacity: string;
-    zip_code: string;
-    care_types: string[];
-    zip_code_ranges: { min_zip_code: number; max_zip_code: number }[];
-  };
-}
-
-const FORM_STEPS = ["name", "careType", "zipCode", "result"] as const;
-type FormStep = typeof FORM_STEPS[number];
-
-// Adapter function to convert API response to the expected format
-const adaptMatchResult = (response: FacilityMatchResponse | null): FacilityMatch | null => {
-  if (!response) return null;
-
-  return {
-    matched: response.matched,
-    facility: response.facility ? {
-      id: response.facility.id,
-      name: response.facility.name,
-      capacity: response.facility.capacity.toString(),
-      zip_code: response.facility.zip_code,
-      care_types: response.facility.care_types?.map(ct => ct.toString()) || [],
-      zip_code_ranges: response.facility.zip_code_ranges || []
-    } : undefined
-  };
-};
-
-// Add a new interface prop for PatientForm
+// Interface for form props
 interface PatientFormProps {
   hideTitle?: boolean;
 }
 
-export default function PatientForm({ hideTitle = false }: PatientFormProps) {
-  const [step, setStep] = useState<FormStep>("name");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiResponse, setApiResponse] = useState<FacilityMatchResponse | null>(null);
-  // Derived state using the adapter function
-  const matchResult = adaptMatchResult(apiResponse);
+// The main form content, separate from the provider logic
+function PatientFormContent({ hideTitle = false }: PatientFormProps) {
+  const {
+    step,
+    setStep,
+    isSubmitting,
+    setIsSubmitting,
+    setApiResponse,
+    matchResult,
+    goBack,
+    resetForm,
+    getProgress,
+    form
+  } = useFormContext();
 
-  const form = useForm<PatientFormData>({
-    resolver: zodResolver(patientFormSchema),
-    defaultValues: {
-      name: "",
-      careType: undefined,
-      zipCode: "",
-    },
-    mode: "onChange",
-  });
+  // Skip if form isn't available (shouldn't happen with proper setup)
+  if (!form) return null;
 
   const handleNextStep = async () => {
     if (step === "name") {
@@ -92,15 +64,20 @@ export default function PatientForm({ hideTitle = false }: PatientFormProps) {
       if (careType === CareType.DAY_CARE) {
         setIsSubmitting(true);
         try {
+          // Sanitize inputs before sending to API
+          const sanitizedName = sanitizeInput(form.getValues("name"));
+
           const result = await FacilityMatchingService.matchFacilityApiV1FacilityMatchingMatchFacilityPost({
-            patient_name: form.getValues("name"),
+            patient_name: sanitizedName,
             care_type: careType,
           });
           setApiResponse(result);
           setStep("result");
         } catch (error) {
           if (error instanceof ApiError) {
-            toast.error(error.message || "Failed to process your request. Please try again.");
+            // Use improved error handling with specific messages
+            const status = error.status?.toString() || undefined;
+            toast.error(getErrorMessage(status, "Failed to process your request. Please try again."));
           } else {
             toast.error("An unexpected error occurred. Please try again.");
           }
@@ -121,20 +98,23 @@ export default function PatientForm({ hideTitle = false }: PatientFormProps) {
 
       setIsSubmitting(true);
       try {
-        const request: FacilityMatchRequest = {
-          patient_name: form.getValues("name"),
+        // Sanitize all inputs before sending to API
+        const zipCode = form.getValues("zipCode");
+        const sanitizedData = {
+          patient_name: sanitizeInput(form.getValues("name")),
           care_type: form.getValues("careType"),
-          zip_code: form.getValues("zipCode")
+          zip_code: zipCode ? sanitizeInput(zipCode) : ""
         };
 
-        const result = await FacilityMatchingService.matchFacilityApiV1FacilityMatchingMatchFacilityPost(request);
+        const result = await FacilityMatchingService.matchFacilityApiV1FacilityMatchingMatchFacilityPost(sanitizedData);
         setApiResponse(result);
         setStep("result");
       } catch (error) {
         if (error instanceof ApiError) {
-          toast.error(error.message || "Failed to match facility. Please try again.");
+          const status = error.status?.toString() || undefined;
+          toast.error(getErrorMessage(status, "Failed to match facility. Please try again."));
         } else {
-          toast.error("An unexpected error occurred while matching facility. Please try again.");
+          toast.error(getErrorMessage("NETWORK_ERROR", "An unexpected error occurred while matching facility."));
         }
         console.error(error);
       } finally {
@@ -143,88 +123,127 @@ export default function PatientForm({ hideTitle = false }: PatientFormProps) {
     }
   };
 
-  const onSubmit = (data: PatientFormData) => {
+  const onSubmit = useCallback((data: PatientFormData) => {
+    // This is just a placeholder for the form submission
+    // The actual submission happens in handleNextStep
     console.log("Form submitted:", data);
-  };
+  }, []);
 
-  const goBack = () => {
-    if (step === "careType") setStep("name");
-    else if (step === "zipCode") setStep("careType");
-    else if (step === "result") {
-      const careType = form.getValues("careType");
-      setStep(careType === CareType.DAY_CARE ? "careType" : "zipCode");
+  // Generate a title for the current step
+  const getStepTitle = () => {
+    switch (step) {
+      case "name": return "Patient Information";
+      case "careType": return "Care Requirements";
+      case "zipCode": return "Location Details";
+      case "result": return "Match Results";
+      default: return "";
     }
   };
 
-  const resetForm = () => {
-    form.reset();
-    setStep("name");
-    setApiResponse(null);
-  };
-
-  const getProgress = () => {
-    const stepIndex = FORM_STEPS.indexOf(step);
-    const totalSteps = step === "result" ? FORM_STEPS.length - 1 : FORM_STEPS.length - 1;
-    return Math.round((stepIndex / totalSteps) * 100);
-  };
-
   return (
-    <Card className="w-full max-w-md mx-auto bg-card text-card-foreground border-border">
-      <CardHeader>
+    <Card className="w-full max-w-md mx-auto bg-card text-card-foreground">
+      <CardHeader className="pb-4">
         {!hideTitle && (
-          <>
-            <CardTitle>CarePortal Beta</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {step === "result"
-                ? "Your match results"
-                : "Find the right care facility for your needs"}
-            </CardDescription>
-          </>
+          <CardTitle className="text-center">CarePortal Beta</CardTitle>
         )}
-        {hideTitle && (
-          <CardDescription className="text-muted-foreground">
-            {step === "result"
-              ? "Your match results"
-              : "Find the right care facility for your needs"}
-          </CardDescription>
-        )}
-        {step !== "result" && (
-          <div className="mt-2">
-            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-300 ease-in-out"
-                style={{ width: `${getProgress()}%` }}
-              />
+
+        {/* Display appropriate title based on current step */}
+        <div className="flex flex-col space-y-1">
+          <h2 className="text-xl font-semibold text-center">{getStepTitle()}</h2>
+
+          {/* Progress bar & step indicator */}
+          {step !== "result" && (
+            <div className="mt-6">
+              <div className="h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div
+                  className="h-full bg-violet-600 dark:bg-violet-500 transition-all duration-300 ease-in-out"
+                  style={{ width: `${getProgress()}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                <span>Step {FORM_STEPS.indexOf(step) + 1} of 3</span>
+                <span>{Math.round(getProgress())}% complete</span>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Step {FORM_STEPS.indexOf(step) + 1} of {FORM_STEPS.length - 1}
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Pass empty title to avoid duplication */}
             {step === "name" && <NameStep form={form} />}
-            {step === "careType" && <CareTypeStep form={form} />}
+            {step === "careType" && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">
+                  Select the type of care the patient needs.
+                </p>
+                <FormField
+                  control={form.control}
+                  name="careType"
+                  render={({ field }) => (
+                    <div className="space-y-3">
+                      <RadioGroup
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-3"
+                      >
+                        <label
+                          className={`radio-option cursor-pointer ${field.value === CareType.STATIONARY ? 'radio-option-selected' : ''}`}
+                          data-value={CareType.STATIONARY}
+                        >
+                          <RadioGroupItem value={CareType.STATIONARY} id="stationary" />
+                          <div className="radio-option-content">
+                            <span className="radio-option-label">Stationary</span>
+                            <p className="radio-option-description">In-patient care at a facility</p>
+                          </div>
+                        </label>
+                        <label
+                          className={`radio-option cursor-pointer ${field.value === CareType.AMBULATORY ? 'radio-option-selected' : ''}`}
+                          data-value={CareType.AMBULATORY}
+                        >
+                          <RadioGroupItem value={CareType.AMBULATORY} id="ambulatory" />
+                          <div className="radio-option-content">
+                            <span className="radio-option-label">Ambulatory</span>
+                            <p className="radio-option-description">Out-patient visiting care</p>
+                          </div>
+                        </label>
+                        <label
+                          className={`radio-option cursor-pointer ${field.value === CareType.DAY_CARE ? 'radio-option-selected' : ''}`}
+                          data-value={CareType.DAY_CARE}
+                        >
+                          <RadioGroupItem value={CareType.DAY_CARE} id="daycare" />
+                          <div className="radio-option-content">
+                            <span className="radio-option-label">Day Care</span>
+                            <p className="radio-option-description">Temporary supervision and care</p>
+                          </div>
+                        </label>
+                      </RadioGroup>
+                    </div>
+                  )}
+                />
+              </div>
+            )}
             {step === "zipCode" && <ZipCodeStep form={form} />}
             {step === "result" && <ResultStep matchResult={matchResult} patientData={form.getValues()} />}
           </form>
         </Form>
         {isSubmitting && (
-          <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between pt-4">
         {step !== "name" && (
           <Button
-            variant="outline"
+            variant="violet"
             onClick={goBack}
             disabled={isSubmitting}
             type="button"
-            className="border-violet-200 dark:border-violet-700 hover:bg-violet-50 dark:hover:bg-violet-900"
+            size="lg"
           >
             Back
           </Button>
@@ -234,7 +253,9 @@ export default function PatientForm({ hideTitle = false }: PatientFormProps) {
             onClick={handleNextStep}
             disabled={isSubmitting}
             type="button"
-            className={`bg-violet-600 hover:bg-violet-700 text-white ${step === "name" ? "ml-auto" : ""}`}
+            variant="violet"
+            size="lg"
+            className={step === "name" ? "ml-auto" : ""}
           >
             {isSubmitting ? "Processing..." : step === "zipCode" ? "Find Matches" : "Next"}
           </Button>
@@ -242,12 +263,32 @@ export default function PatientForm({ hideTitle = false }: PatientFormProps) {
           <Button
             type="button"
             onClick={resetForm}
-            className="bg-violet-600 hover:bg-violet-700 text-white"
+            variant="violet"
+            size="lg"
           >
             Start Over
           </Button>
         )}
       </CardFooter>
     </Card>
+  );
+}
+
+// The main component that sets up the form provider
+export default function PatientForm(props: PatientFormProps) {
+  const form = useForm<PatientFormData>({
+    resolver: zodResolver(patientFormSchema),
+    defaultValues: {
+      name: "",
+      careType: undefined,
+      zipCode: "",
+    },
+    mode: "onChange",
+  });
+
+  return (
+    <FormProvider form={form}>
+      <PatientFormContent {...props} />
+    </FormProvider>
   );
 }

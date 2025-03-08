@@ -45,157 +45,174 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.5242 0.272 292.55);
-  --primary-foreground: oklch(0.98 0.003 252.44);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-  color-scheme: light dark;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-html {
-  transition: background-color 0.3s ease;
-}
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 266 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 266 100% 50%;
+    --radius: 0.5rem;
+  }
 
-html[data-theme="dark"] {
-  background-color: hsl(240 10% 3.9%);
-  color: hsl(0 0% 98%);
-}
-
-html[data-theme="light"] {
-  background-color: hsl(0 0% 100%);
-  color: hsl(240 10% 3.9%);
-}
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.129 0.042 264.695);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.129 0.042 264.695);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.7324 0.191 292.62);
-  --primary-foreground: oklch(0.1 0.015 248.1);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.279 0.041 260.031);
-  --input: oklch(0.279 0.041 260.031);
-  --ring: oklch(0.446 0.043 257.281);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(0.279 0.041 260.031);
-  --sidebar-ring: oklch(0.446 0.043 257.281);
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 266 84% 65%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 18%;
+    --input: 240 3.7% 18%;
+    --ring: 266 84% 65%;
+  }
 }
 
 @layer base {
+
+  /* Base styles */
   * {
     @apply border-border outline-ring/50;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   body {
     @apply bg-background text-foreground;
   }
 
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --primary: 270 70% 60%;
-    --primary-foreground: 0 0% 98%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --border: 240 5.9% 90%;
+  /* Heading styles */
+  h1,
+  h2,
+  h3 {
+    @apply text-violet-600 font-bold;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 6.9%;
-    --card-foreground: 0 0% 98%;
-    --primary: 270 70% 70%;
-    --primary-foreground: 0 0% 98%;
-    --muted: 240 4.8% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --border: 240 5.9% 25%;
+  html[data-theme='dark'] h1,
+  html[data-theme='dark'] h2,
+  html[data-theme='dark'] h3 {
+    @apply text-violet-400;
   }
 
-  body {
-    @apply bg-background text-foreground transition-colors duration-300;
+  /* Form label styles */
+  label {
+    @apply font-medium text-gray-700;
+  }
+
+  html[data-theme='dark'] label {
+    @apply text-gray-200;
   }
 }
 
-/* Light Theme */
-@media (prefers-color-scheme: light) {
-  :root {
-    --primary: oklch(0.5242 0.272 292.55);
-    --primary-foreground: oklch(0.98 0.003 252.44);
+@layer components {
+
+  /* Card styling */
+  .card {
+    @apply bg-card text-card-foreground rounded-xl shadow-md border-0 overflow-hidden;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
-}
 
-/* Dark Theme */
-[data-theme="dark"] {
-  :root {
-    --primary: oklch(0.7324 0.191 292.62);
-    --primary-foreground: oklch(0.1 0.015 248.1);
+  html[data-theme="dark"] .card {
+    @apply shadow-lg shadow-violet-950/20 border-violet-900/20;
   }
-}
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+  /* Progress bar styling */
+  .progress-bar {
+    @apply h-2 bg-muted rounded-full overflow-hidden border border-border/50;
+  }
 
-body {
-  @apply bg-background text-foreground;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+  .progress-bar-fill {
+    @apply h-full bg-primary transition-all duration-300 ease-in-out;
+  }
 
-.card {
-  @apply bg-card text-card-foreground;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  /* Button styling */
+  button,
+  .button {
+    @apply rounded-full;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  }
+
+  button:active,
+  .button:active {
+    transform: scale(0.98);
+  }
+
+  /* Radio option styling */
+  .radio-option {
+    @apply flex items-start gap-4 p-3 border border-gray-200 rounded-lg w-full relative;
+    @apply transition-colors duration-200 ease-in-out;
+    @apply hover:bg-violet-50 hover:border-violet-300;
+  }
+
+  html[data-theme="dark"] .radio-option {
+    @apply border-gray-700 hover:bg-violet-900/30 hover:border-violet-600;
+  }
+
+  html[data-theme="dark"] .radio-option[data-state="checked"] {
+    @apply bg-violet-900/40 border-violet-500;
+  }
+
+  .radio-option input[type="radio"] {
+    @apply relative z-10;
+  }
+
+  .radio-option-content {
+    @apply flex-1 relative z-10;
+  }
+
+  .radio-option::before {
+    content: '';
+    @apply absolute inset-0 z-0;
+  }
+
+  /* Dark mode form control improvements */
+  html[data-theme="dark"] .form-control {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  html[data-theme="dark"] input,
+  html[data-theme="dark"] select,
+  html[data-theme="dark"] textarea {
+    @apply bg-gray-800 border-gray-700 text-gray-200;
+  }
+
+  html[data-theme="dark"] input::placeholder {
+    @apply text-gray-500;
+  }
+
+  /* Improve dark mode text colors */
+  html[data-theme="dark"] .text-muted-foreground {
+    @apply text-gray-400;
+  }
+
+  html[data-theme="dark"] .text-card-foreground {
+    @apply text-gray-200;
+  }
 }

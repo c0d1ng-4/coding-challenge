@@ -20,15 +20,14 @@ export const zipCodeSchema = z.object({
 });
 
 export const patientFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
+  name: z.string().min(2, "Name must be at least 2 characters"),
   careType: z.nativeEnum(CareType, {
     required_error: "Please select a type of care.",
   }),
-  zipCode: z.string().regex(/^\d{5}$/, {
-    message: "Please enter a valid 5-digit zip code.",
-  }).optional(),
+  zipCode: z.string()
+    .regex(/^\d{5}$/, "Please enter a valid 5-digit zip code")
+    .optional()
+    .or(z.literal("")),
 }).refine(data => {
   return data.careType === CareType.DAY_CARE || !!data.zipCode;
 }, {

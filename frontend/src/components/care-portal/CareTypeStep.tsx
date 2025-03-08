@@ -14,7 +14,6 @@ interface CareTypeStepProps {
 export default function CareTypeStep({ form }: CareTypeStepProps) {
   return (
     <FormStep
-      title="Care Requirements"
       description="Select the type of care the patient needs."
     >
       <FormField
@@ -29,20 +28,20 @@ export default function CareTypeStep({ form }: CareTypeStepProps) {
                 defaultValue={field.value}
                 className="flex flex-col space-y-3"
               >
-                <div className="flex items-center space-x-2 p-3 border rounded-md hover:bg-slate-50">
+                <div className="radio-option">
                   <RadioGroupItem value={CareType.STATIONARY} id="stationary" />
-                  <Label htmlFor="stationary" className="font-medium">Stationary</Label>
-                  <p className="text-sm text-gray-500 ml-2">In-patient care at a facility</p>
+                  <Label htmlFor="stationary" className="radio-option-label">Stationary</Label>
+                  <p className="radio-option-description">In-patient care at a facility</p>
                 </div>
-                <div className="flex items-center space-x-2 p-3 border rounded-md hover:bg-slate-50">
+                <div className="radio-option">
                   <RadioGroupItem value={CareType.AMBULATORY} id="ambulatory" />
-                  <Label htmlFor="ambulatory" className="font-medium">Ambulatory</Label>
-                  <p className="text-sm text-gray-500 ml-2">Out-patient visiting care</p>
+                  <Label htmlFor="ambulatory" className="radio-option-label">Ambulatory</Label>
+                  <p className="radio-option-description">Out-patient visiting care</p>
                 </div>
-                <div className="flex items-center space-x-2 p-3 border rounded-md hover:bg-slate-50">
+                <div className="radio-option">
                   <RadioGroupItem value={CareType.DAY_CARE} id="daycare" />
-                  <Label htmlFor="daycare" className="font-medium">Day Care</Label>
-                  <p className="text-sm text-gray-500 ml-2">Temporary supervision and care</p>
+                  <Label htmlFor="daycare" className="radio-option-label">Day Care</Label>
+                  <p className="radio-option-description">Temporary supervision and care</p>
                 </div>
               </RadioGroup>
             </FormControl>
