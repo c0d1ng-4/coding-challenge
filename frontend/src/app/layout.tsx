@@ -2,12 +2,13 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "CarePortal Beta",
-  description: "Find the right care facility for your needs",
+  description: "Facility matcher",
 };
 
 export default function RootLayout({
@@ -16,10 +17,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        {children}
-        <Toaster position="top-center" />
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} bg-background text-foreground transition-colors duration-300`}>
+        <ThemeProvider>
+          {children}
+          <Toaster position="top-center" />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -52,8 +52,8 @@
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.5242 0.272 292.55);
+  --primary-foreground: oklch(0.98 0.003 252.44);
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
@@ -79,6 +79,21 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  color-scheme: light dark;
+}
+
+html {
+  transition: background-color 0.3s ease;
+}
+
+html[data-theme="dark"] {
+  background-color: hsl(240 10% 3.9%);
+  color: hsl(0 0% 98%);
+}
+
+html[data-theme="light"] {
+  background-color: hsl(0 0% 100%);
+  color: hsl(240 10% 3.9%);
 }
 
 .dark {
@@ -88,8 +103,8 @@
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.129 0.042 264.695);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.984 0.003 247.858);
-  --primary-foreground: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.7324 0.191 292.62);
+  --primary-foreground: oklch(0.1 0.015 248.1);
   --secondary: oklch(0.279 0.041 260.031);
   --secondary-foreground: oklch(0.984 0.003 247.858);
   --muted: oklch(0.279 0.041 260.031);
@@ -119,8 +134,68 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --primary: 270 70% 60%;
+    --primary-foreground: 0 0% 98%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --border: 240 5.9% 90%;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 6.9%;
+    --card-foreground: 0 0% 98%;
+    --primary: 270 70% 70%;
+    --primary-foreground: 0 0% 98%;
+    --muted: 240 4.8% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --border: 240 5.9% 25%;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+}
+
+/* Light Theme */
+@media (prefers-color-scheme: light) {
+  :root {
+    --primary: oklch(0.5242 0.272 292.55);
+    --primary-foreground: oklch(0.98 0.003 252.44);
+  }
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  :root {
+    --primary: oklch(0.7324 0.191 292.62);
+    --primary-foreground: oklch(0.1 0.015 248.1);
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-background text-foreground;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card {
+  @apply bg-card text-card-foreground;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

@@ -53,7 +53,12 @@ const adaptMatchResult = (response: FacilityMatchResponse | null): FacilityMatch
   };
 };
 
-export default function PatientForm() {
+// Add a new interface prop for PatientForm
+interface PatientFormProps {
+  hideTitle?: boolean;
+}
+
+export default function PatientForm({ hideTitle = false }: PatientFormProps) {
   const [step, setStep] = useState<FormStep>("name");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiResponse, setApiResponse] = useState<FacilityMatchResponse | null>(null);
@@ -164,23 +169,34 @@ export default function PatientForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto bg-card text-card-foreground border-border">
       <CardHeader>
-        <CardTitle>CarePortal Beta</CardTitle>
-        <CardDescription>
-          {step === "result"
-            ? "Your match results"
-            : "Find the right care facility for your needs"}
-        </CardDescription>
+        {!hideTitle && (
+          <>
+            <CardTitle>CarePortal Beta</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              {step === "result"
+                ? "Your match results"
+                : "Find the right care facility for your needs"}
+            </CardDescription>
+          </>
+        )}
+        {hideTitle && (
+          <CardDescription className="text-muted-foreground">
+            {step === "result"
+              ? "Your match results"
+              : "Find the right care facility for your needs"}
+          </CardDescription>
+        )}
         {step !== "result" && (
           <div className="mt-2">
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary transition-all duration-300 ease-in-out"
                 style={{ width: `${getProgress()}%` }}
               />
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Step {FORM_STEPS.indexOf(step) + 1} of {FORM_STEPS.length - 1}
             </p>
           </div>
@@ -208,6 +224,7 @@ export default function PatientForm() {
             onClick={goBack}
             disabled={isSubmitting}
             type="button"
+            className="border-violet-200 dark:border-violet-700 hover:bg-violet-50 dark:hover:bg-violet-900"
           >
             Back
           </Button>
@@ -217,11 +234,16 @@ export default function PatientForm() {
             onClick={handleNextStep}
             disabled={isSubmitting}
             type="button"
+            className={`bg-violet-600 hover:bg-violet-700 text-white ${step === "name" ? "ml-auto" : ""}`}
           >
             {isSubmitting ? "Processing..." : step === "zipCode" ? "Find Matches" : "Next"}
           </Button>
         ) : (
-          <Button type="button" onClick={resetForm}>
+          <Button
+            type="button"
+            onClick={resetForm}
+            className="bg-violet-600 hover:bg-violet-700 text-white"
+          >
             Start Over
           </Button>
         )}
