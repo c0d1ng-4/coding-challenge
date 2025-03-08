@@ -88,11 +88,15 @@ public_rt = aws.ec2.RouteTable(
 
 # Associate route table with public subnets
 public_subnet_a_rt_assoc = aws.ec2.RouteTableAssociation(
-    f"{app_name}-public-subnet-a-rt-assoc", subnet_id=public_subnet_a.id, route_table_id=public_rt.id
+    f"{app_name}-public-subnet-a-rt-assoc",
+    subnet_id=public_subnet_a.id,
+    route_table_id=public_rt.id,
 )
 
 public_subnet_b_rt_assoc = aws.ec2.RouteTableAssociation(
-    f"{app_name}-public-subnet-b-rt-assoc", subnet_id=public_subnet_b.id, route_table_id=public_rt.id
+    f"{app_name}-public-subnet-b-rt-assoc",
+    subnet_id=public_subnet_b.id,
+    route_table_id=public_rt.id,
 )
 
 # Security group for EC2 instance
@@ -133,7 +137,7 @@ backend_sg = aws.ec2.SecurityGroup(
     },
 )
 
-# Create IAM role for EC2 instance (to connect to RDS)
+# Create IAM role for EC2 instance (to connect to RDS or other services)
 instance_role = aws.iam.Role(
     f"{app_name}-instance-role",
     assume_role_policy=json.dumps(
@@ -154,8 +158,15 @@ instance_role = aws.iam.Role(
 # Create IAM instance profile
 instance_profile = aws.iam.InstanceProfile(f"{app_name}-instance-profile", role=instance_role.name)
 
-# User data script to setup the EC2 instance
-user_data = f"""#!/bin/bash
+# Create the user data using Pulumi outputs so that secrets are properly resolved.
+# Use dictionary keys to access values.
+user_data = pulumi.Output.all(
+    db_host=config.require("db_host"),
+    db_name=config.require("db_name"),
+    db_user=config.require_secret("db_user"),
+    db_password=config.require_secret("db_password"),
+).apply(
+    lambda args: f"""#!/bin/bash
 apt-get update
 apt-get install -y python3 python3-pip git
 pip3 install poetry
@@ -164,15 +175,16 @@ cd /app/backend
 poetry install
 cd /app
 cat > /app/backend/.env << EOL
-DB_HOST={config.require("db_host")}
+DB_HOST={args["db_host"]}
 DB_PORT=5432
-DB_NAME={config.require("db_name")}
-DB_USER={config.require_secret("db_user")}
-DB_PASSWORD={config.require_secret("db_password")}
+DB_NAME={args["db_name"]}
+DB_USER={args["db_user"]}
+DB_PASSWORD={args["db_password"]}
 EOL
 cd /app/backend
 poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 """
+)
 
 # Get the latest Ubuntu 22.04 LTS AMI from SSM Parameter Store
 ubuntu_ami = aws.ssm.get_parameter(
