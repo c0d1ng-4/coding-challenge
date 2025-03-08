@@ -27,7 +27,7 @@ class FacilityRepository(SQLAlchemyRepository[FacilityModel, Facility], Facility
             )
         )
         result = await self.session.execute(stmt)
-        return [await self._to_domain(obj) for obj in result.scalars().all()]
+        return [await self._to_domain(obj) for obj in result.unique().scalars().all()]
 
     async def get_by_zip_code(self, zip_code: str) -> list[Facility]:
         stmt = (
@@ -39,7 +39,7 @@ class FacilityRepository(SQLAlchemyRepository[FacilityModel, Facility], Facility
             )
         )
         result = await self.session.execute(stmt)
-        return [await self._to_domain(obj) for obj in result.scalars().all()]
+        return [await self._to_domain(obj) for obj in result.unique().scalars().all()]
 
     async def get_by_care_type(self, care_type: CareType) -> list[Facility]:
         stmt = (
@@ -53,7 +53,7 @@ class FacilityRepository(SQLAlchemyRepository[FacilityModel, Facility], Facility
             )
         )
         result = await self.session.execute(stmt)
-        return [await self._to_domain(obj) for obj in result.scalars().all()]
+        return [await self._to_domain(obj) for obj in result.unique().scalars().all()]
 
     async def create(self, obj_in: Facility) -> Facility:
         facility_data = obj_in.model_dump(exclude={"id", "care_types", "zip_code_ranges"})
